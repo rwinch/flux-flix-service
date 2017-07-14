@@ -1,0 +1,10 @@
+---
+applications:
+- name: ffs-service
+  memory: 512M
+  path: target/ffs-service-0.0.1-SNAPSHOT.jar
+  timeout: 60
+  services:
+    - mongo-db
+  env:
+    JBP_CONFIG_SPRING_AUTO_RECONFIGURATION: '[enabled: false]'

@@ -1,7 +1,6 @@
 package com.example;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 import lombok.extern.java.Log;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -54,7 +53,12 @@ class MovieEvent {
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 class Movie {
+    @Getter
+    @Setter
     private String id;
+    @Getter
+    @Setter
     private String title;
 }
