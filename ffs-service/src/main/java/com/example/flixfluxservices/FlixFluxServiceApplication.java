@@ -6,6 +6,7 @@ import com.mongodb.reactivestreams.client.MongoClients;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -254,17 +255,4 @@ class Movie {
     @Id
     private String id;
     private String title;
-}
-
-@Configuration
-class PcfMongoClientConfig {
-    @Bean
-    public static MongoClient mongo(Environment env) throws Exception {
-        String vcapJson = env.getProperty("VCAP_SERVICES");
-        Map<String, Map<String,
-                List<Map<String,
-                        Map<String,String>>>>> vcap = new ObjectMapper().readValue(vcapJson, Map.class);
-        String uri = vcap.get("VCAP_SERVICES").get("mlab").get(0).get("credentials").get("uri");
-        return MongoClients.create(uri);
-    }
 }
