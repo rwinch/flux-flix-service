@@ -6,6 +6,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -22,21 +23,31 @@ public class FluxFlixServiceApplicationTests {
 
     @Test
     public void getEventsTakeWithNoVirtualTimeWorks() {
-        Movie movie = service.all().blockFirst();
-
-        StepVerifier.create(service.events(movie.getId()).take(SIZE).collectList())
-                .thenAwait(Duration.ofHours(1))
-                .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
-                .verifyComplete();
+        StepVerifier.create(service
+                .all()
+                .take(1)
+                .map( movie -> movie.getId())
+                .flatMap(service::events)
+                .take(SIZE)
+                .collectList()
+            )
+            .thenAwait(Duration.ofHours(1))
+            .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
+            .verifyComplete();
     }
 
     @Test
     public void getEventsTakeWithVirtualTimeHoursHangs() {
-        Movie movie = service.all().blockFirst();
-
-        StepVerifier.withVirtualTime(() -> service.events(movie.getId()).take(SIZE).collectList())
-                .thenAwait(Duration.ofHours(1))
-                .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
-                .verifyComplete();
+        StepVerifier.withVirtualTime(() -> service
+                .all()
+                .take(1)
+                .map( movie -> movie.getId())
+                .flatMap(service::events)
+                .take(SIZE)
+                .collectList()
+            )
+            .thenAwait(Duration.ofHours(1))
+            .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
+            .verifyComplete();
     }
 }
