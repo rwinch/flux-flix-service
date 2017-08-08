@@ -18,25 +18,25 @@ public class FluxFlixServiceApplicationTests {
     @Autowired
     private MovieService service;
 
+    int SIZE = 2;
+
     @Test
-    public void getEventsTakeSadness() {
+    public void getEventsTakeWithNoVirtualTimeWorks() {
         Movie movie = service.all().blockFirst();
 
-        StepVerifier.withVirtualTime(() -> service.events(movie.getId()).take(10).collect(Collectors.toList()))
-                .thenAwait(Duration.ofHours(1000))
-                .consumeNextWith(list -> Assert.assertTrue(list.size() == 10))
+        StepVerifier.create(service.events(movie.getId()).take(SIZE).collectList())
+                .thenAwait(Duration.ofHours(1))
+                .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
                 .verifyComplete();
     }
 
     @Test
-    public void getEventsTake10Works() {
+    public void getEventsTakeWithVirtualTimeHoursHangs() {
         Movie movie = service.all().blockFirst();
 
-
-        StepVerifier.withVirtualTime(() -> service.eventsByMovie(movie).take(10).collect(Collectors.toList()))
-                .thenAwait(Duration.ofHours(1000))
-                .consumeNextWith(list -> Assert.assertTrue(list.size() == 10))
+        StepVerifier.withVirtualTime(() -> service.events(movie.getId()).take(SIZE).collectList())
+                .thenAwait(Duration.ofHours(1))
+                .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
                 .verifyComplete();
     }
-
 }
