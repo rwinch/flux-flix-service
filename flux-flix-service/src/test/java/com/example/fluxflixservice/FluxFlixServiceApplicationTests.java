@@ -7,28 +7,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class FluxFlixServiceApplicationTests {
 
     @Autowired
-    private MovieService service;
+    private MovieRepository movies;
 
     int SIZE = 2;
 
     @Test
     public void getEventsTakeWithNoVirtualTimeWorks() {
-        StepVerifier.create(service
-                .all()
+        StepVerifier.create(movies
+                .findAll()
                 .take(1)
                 .map( movie -> movie.getId())
-                .flatMap(service::events)
+                .flatMap(this::eventsById)
                 .take(SIZE)
                 .collectList()
             )
@@ -39,11 +39,28 @@ public class FluxFlixServiceApplicationTests {
 
     @Test
     public void getEventsTakeWithVirtualTimeHoursHangs() {
-        StepVerifier.withVirtualTime(() -> service
-                .all()
+        StepVerifier.withVirtualTime(() -> movies
+                .findAll()
                 .take(1)
                 .map( movie -> movie.getId())
-                .flatMap(service::events)
+                .flatMap(this::eventsById)
+                .take(SIZE)
+                .collectList()
+            )
+            .thenAwait(Duration.ofHours(1))
+            .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
+            .verifyComplete();
+    }
+
+    //
+
+
+
+    @Test
+    public void getEventsByMovieTakeWithVirtualTimeHoursHangs() {
+        StepVerifier.withVirtualTime(() -> Flux.just(new Movie("hi"))
+                .take(1)
+                .flatMap(this::eventsByMovie)
                 .take(SIZE)
                 .collectList()
             )
@@ -62,5 +79,21 @@ public class FluxFlixServiceApplicationTests {
             .thenAwait(Duration.ofHours(1000))
             .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
             .verifyComplete();
+    }
+
+    Flux<MovieEvent> eventsById(String id) {
+        return this.movies.findById(id).flatMapMany(movie -> {
+            Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
+
+            return interval.map( tick -> new MovieEvent(new Date(), movie));
+        });
+    }
+
+    Flux<MovieEvent> eventsByMovie(Movie m) {
+        return Mono.just(m).flatMapMany(movie -> {
+            Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
+
+            return interval.map( tick -> new MovieEvent(new Date(), movie));
+        });
     }
 }
