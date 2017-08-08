@@ -54,7 +54,7 @@ public class FluxFlixServiceApplicationTests {
     //
 
     @Test
-    public void getEventsByMovieTakeWithVirtualTimeAndEventsWithSpringDataHangs() {
+    public void withVirtualTimeAndSpringDataThenHangs() {
         StepVerifier.withVirtualTime(() -> this.movies.findAll()
                 .take(1)
                 .flatMap(movie -> {
@@ -70,7 +70,7 @@ public class FluxFlixServiceApplicationTests {
     }
 
     @Test
-    public void getEventsByMovieTakeWithNoVirtualTimeAndEventsWithSpringDataWorks() {
+    public void withNoVirtualTimeAndSpringDataThenWorks() {
         StepVerifier.create(this.movies.findAll()
                 .take(1)
                 .flatMap(movie -> {
@@ -86,7 +86,7 @@ public class FluxFlixServiceApplicationTests {
     }
 
     @Test
-    public void getEventsByMovieTakeWithVirtualTimeAndEventsWithNoSpringDataWorks() {
+    public void withVirtualTimeAndNoSpringDataThenWorks() {
         StepVerifier.withVirtualTime(() -> Flux.just(new Movie("Mocked"))
                 .take(1)
                 .flatMap(movie -> {
