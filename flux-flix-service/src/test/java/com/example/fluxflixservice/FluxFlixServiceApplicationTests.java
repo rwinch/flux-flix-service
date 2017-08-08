@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -54,13 +53,30 @@ public class FluxFlixServiceApplicationTests {
 
     //
 
-
+    @Test
+    public void getEventsByMovieTakeWithVirtualTimeAndEventsWithSpringDataHangs() {
+        StepVerifier.withVirtualTime(() -> this.movies.findAll()
+                .take(1)
+                .flatMap(movie -> {
+                    Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
+                    return interval.map( tick -> new MovieEvent(new Date(), movie));
+                })
+                .take(SIZE)
+                .collectList()
+            )
+            .thenAwait(Duration.ofHours(1))
+            .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
+            .verifyComplete();
+    }
 
     @Test
-    public void getEventsByMovieTakeWithVirtualTimeHoursHangs() {
-        StepVerifier.withVirtualTime(() -> Flux.just(new Movie("hi"))
+    public void getEventsByMovieTakeWithVirtualTimeAndEventsWithNoSpringDataWorks() {
+        StepVerifier.withVirtualTime(() -> Flux.just(new Movie("Mocked"))
                 .take(1)
-                .flatMap(this::eventsByMovie)
+                .flatMap(movie -> {
+                    Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
+                    return interval.map( tick -> new MovieEvent(new Date(), movie));
+                })
                 .take(SIZE)
                 .collectList()
             )
@@ -83,14 +99,6 @@ public class FluxFlixServiceApplicationTests {
 
     Flux<MovieEvent> eventsById(String id) {
         return this.movies.findById(id).flatMapMany(movie -> {
-            Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
-
-            return interval.map( tick -> new MovieEvent(new Date(), movie));
-        });
-    }
-
-    Flux<MovieEvent> eventsByMovie(Movie m) {
-        return Mono.just(m).flatMapMany(movie -> {
             Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
 
             return interval.map( tick -> new MovieEvent(new Date(), movie));
