@@ -55,7 +55,7 @@ public class FluxFlixServiceApplicationTests {
 
     @Test
     public void withVirtualTimeAndSpringDataThenHangs() {
-        StepVerifier.withVirtualTime(() -> this.movies.findAll()
+        StepVerifier.withVirtualTime(() -> this.movies.findAll() // only this line differs
                 .take(1)
                 .flatMap(movie -> {
                     Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
@@ -71,7 +71,7 @@ public class FluxFlixServiceApplicationTests {
 
     @Test
     public void withNoVirtualTimeAndSpringDataThenWorks() {
-        StepVerifier.create(this.movies.findAll()
+        StepVerifier.create(this.movies.findAll() // only this line differs
                 .take(1)
                 .flatMap(movie -> {
                     Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
@@ -87,7 +87,7 @@ public class FluxFlixServiceApplicationTests {
 
     @Test
     public void withVirtualTimeAndNoSpringDataThenWorks() {
-        StepVerifier.withVirtualTime(() -> Flux.just(new Movie("Mocked"))
+        StepVerifier.withVirtualTime(() -> Flux.just(new Movie("Mocked")) // only this line differs
                 .take(1)
                 .flatMap(movie -> {
                     Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
