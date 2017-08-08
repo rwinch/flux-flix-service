@@ -70,6 +70,22 @@ public class FluxFlixServiceApplicationTests {
     }
 
     @Test
+    public void getEventsByMovieTakeWithNoVirtualTimeAndEventsWithSpringDataWorks() {
+        StepVerifier.create(this.movies.findAll()
+                .take(1)
+                .flatMap(movie -> {
+                    Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
+                    return interval.map( tick -> new MovieEvent(new Date(), movie));
+                })
+                .take(SIZE)
+                .collectList()
+            )
+            .thenAwait(Duration.ofHours(1))
+            .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
+            .verifyComplete();
+    }
+
+    @Test
     public void getEventsByMovieTakeWithVirtualTimeAndEventsWithNoSpringDataWorks() {
         StepVerifier.withVirtualTime(() -> Flux.just(new Movie("Mocked"))
                 .take(1)
