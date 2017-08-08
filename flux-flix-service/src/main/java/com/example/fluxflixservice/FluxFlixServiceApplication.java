@@ -193,11 +193,9 @@ class MovieService {
 
     Flux<MovieEvent> events(String id) {
         return byId(id).flatMapMany(movie -> {
-            Flux<MovieEvent> movieEvents = Flux.generate(
-                    sink -> sink.next(new MovieEvent(new Date(), movie)));
             Flux<Long> interval = Flux.interval(Duration.ofSeconds(1));
-            Flux<Tuple2<MovieEvent, Long>> tuple2Flux = Flux.zip(movieEvents, interval);
-            return tuple2Flux.map(Tuple2::getT1);
+
+            return interval.map( tick -> new MovieEvent(new Date(), movie));
         });
     }
 
