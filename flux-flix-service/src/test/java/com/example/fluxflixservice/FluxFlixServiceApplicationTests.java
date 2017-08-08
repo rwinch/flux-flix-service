@@ -10,6 +10,7 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
@@ -47,6 +48,18 @@ public class FluxFlixServiceApplicationTests {
                 .collectList()
             )
             .thenAwait(Duration.ofHours(1))
+            .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
+            .verifyComplete();
+    }
+
+    @Test
+    public void gh776() {
+        StepVerifier.withVirtualTime(() -> Flux.interval(Duration.ofMillis(1))
+                .map(tick -> new Date())
+                .take(SIZE)
+                .collectList()
+            )
+            .thenAwait(Duration.ofHours(1000))
             .consumeNextWith(list -> Assert.assertTrue(list.size() == SIZE))
             .verifyComplete();
     }
